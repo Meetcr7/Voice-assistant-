@@ -1,0 +1,158 @@
+import speech_recognition as sr
+import pyttsx3
+#import pyaudio
+import pywhatkit
+import datetime
+import wikipedia
+import pyjokes
+import PyPDF2
+import webbrowser
+import os
+import smtplib
+from playsound import playsound
+
+
+
+
+command = ''
+listner = sr.Recognizer()
+engine = pyttsx3.init()
+# for converting voice to female
+voices = engine.getProperty('voices')
+
+# methods for both, male and female voices
+def alexa():
+    engine.setProperty('voice',voices[1].id)
+def mike():
+    engine.setProperty('voice',voices[0].id)
+    
+
+    
+
+# method to read a book
+def read():
+    book = open('book.pdf','rb') # open the book to read
+    pdfReader = PyPDF2.PdfFileReader(book)
+    pages = pdfReader.numPages # to get number of pages in book
+    #print(pages)
+    #initialize module
+    engine = pyttsx3.init()
+    engine.setProperty('rate',145)
+    voices = engine.getProperty('voices')
+   # engine.setProperty('voice',voices[0].id) # to convert voice to female
+    page = pdfReader.getPage(0)
+    text = page.extractText()
+    try:
+        print(text)
+        engine.say(text)
+        engine.runAndWait()
+    except:
+        print('sorry')
+    
+        
+
+
+
+def talk(text):
+    engine.say(text)
+    engine.runAndWait()
+    
+def wishMe():
+    hour = int(datetime.datetime.now().hour)
+    if hour>=0 and hour<12:
+        talk("Good Morning!")
+    elif hour>=12 and hour<18:
+        talk("Good Afternoon!")
+    else:
+        talk("Good Evening!")
+    talk("we are mike and alexa. Please tell us how may we help you sir")
+    
+def take_command():
+    try:
+        with sr.Microphone() as source:
+            print('Say Something...')
+            voice = listner.listen(source)
+            global command
+            command = listner.recognize_google(voice)
+            command = command.lower()
+            if 'alexa' in command:
+                alexa()
+                command = command.replace('alexa',' ') # remove alexa form the command, for simplicity of search
+                print(command)
+            if 'mike' in command:
+                mike()
+                command = command.replace('mike',' ') # remove harry form the command, for simplicity of search
+                print(command)
+            #else:
+             #   engine.say('please, call me alexa')
+                #print('Please call me Alexa..!')
+    except:
+        pass
+    return command
+
+
+def run_alexa():
+    global command
+    command = take_command()
+    #print(command)
+    if('play' in command):
+        song = command.replace('play',' ')
+        talk('playing' + song)
+        #talk(song)
+        pywhatkit.playonyt(song)
+    elif('how are you' in command):
+        talk('I am fine')
+    elif('time' in command):
+        strTime = datetime.datetime.now().strftime("%H:%M:%S")
+        print(strTime)
+        talk(f"Sir, the time is {strTime}")
+    elif('who is' in command):
+        person = command.replace('who is','')
+        info = wikipedia.summary(person,1) 
+        print(info)
+        talk(info)
+    elif('joke' in command):
+        a = pyjokes.get_joke()
+        print(a)
+        talk(a)
+    elif('read a book' in command):
+        read()
+        if('stop' in command):
+            talk(ok)
+    elif('laugh' in command):
+        talk('hahahaha')
+    #elif('cry'):
+     #   talk('ammmmmmmmmmmmm')
+    elif('alarm' in command):
+        talk('Enter the time')
+        time = input("Enter the time: ")
+        while True:
+            Time_Ac = datetime.datetime.now()
+            now = Time_Ac.strftime("%H:%M:%S")
+            if(now == time):
+                talk('time to wake up')
+                print('time to wake up')
+                playsound('short_tone.mp3')
+            elif(now > time):
+                break     
+    elif('open google' in command):
+        webbrowser.open("google.com")
+    elif('start music' in command):
+        music_dir = 'D:\Meet\Songs\Enrique\Enrique Iglesias - Greatest Hits [2008][CD+3 SkidVid_XviD+Cov]'
+        songs = os.listdir(music_dir)
+        print(songs)
+        os.startfile(os.path.join(music_dir, songs[0]))
+    elif('open notepad' in command):
+        codePath = r'C:\WINDOWS\system32\notepad.exe'
+        os.startfile(codePath)
+    elif("send message" in command):
+        pywhatkit.sendwhatmsg("+916354572088", "hi", 12, 7)
+    else:
+        talk('please say it again')
+        run_alexa()
+        
+    
+while(True):   
+    wishMe()
+    run_alexa()
+    break
